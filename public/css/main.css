@@ -1,7 +1,7 @@
 body {
 	background-color: black;
 	color: #ccc;
-	background-image: url('img/space_bg.jpg');
+	background-image: url('/drifting/img/space_bg.jpg');
 	background-repeat: repeat;
 }
 
