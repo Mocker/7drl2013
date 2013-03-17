@@ -13,12 +13,14 @@
 <title>Drifting In Solar Winds : The Roguelike</title>
 
 <!-- Game Engine Dependencies -->
+<script src="lib/three.min.js" type="text/javascript"></script>
 <script src="lib/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script src="lib/rot.js" type="text/javascript"></script>
 <script src="lib/rlcore/core.js" type="text/javascript"></script>
 <script src="lib/drifting/drifting.js" type="text/javascript"></script>
 <script src="lib/seedrandom.js" type="text/javascript"></script>
 
+<script src="lib/drifting/starmap.js" type="text/javascript"></script>
 <script src="lib/drifting/crap.js" type="text/javascript"></script>
 <script src="lib/drifting/ship.js" type="text/javascript"></script>
 <script src="lib/drifting/weapon.js" type="text/javascript"></script>
@@ -37,6 +39,7 @@ var Eng;
 $ = jQuery;
 $(document).ready(function(){
 	//Initial site/ui/game bindings
+	$('div.canvas_overlay').hide();
 	$('#player_name_ok').bind('click',function(evt){
 		//start up game in the play div
 		var pName = $('#player_name').val();
@@ -144,6 +147,10 @@ $(document).ready(function(){
 				<div id="play_notice">
 					What is thy name brave adventurer ? <br>
 					<input id='player_name' size=50 style="margin-right:20px;"><button id='player_name_ok'>Ready</button>
+				</div>
+
+				<div id='star_overlay' class='canvas_overlay'>
+					<h4>Location: <b><a id='overlay_cur_galaxy' data-id='galaxy'>Milky Way</a></b> -> <b><a id='overlay_cur_star' data-id='1'>Outer X10</a></b></h4>
 				</div>
 			</div>
 	

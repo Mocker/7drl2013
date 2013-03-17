@@ -1,0 +1,360 @@
+<html>
+<head>
+<title>StarMap test</title>
+
+<script src="lib/three.min.js" type="text/javascript"></script>
+<script src="lib/jquery-1.9.1.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+$ = jQuery;
+
+var config = {
+	CONTAINER_ID    : "world",
+	CAMERA_FOV      : 45,
+	CAMERA_ASPECT   : window.innerWidth / window.innerHeight,
+	CAMERA_NEAR     : 1,
+	CAMERA_FAR      : 5000,
+	FOG_COLOR       : 0x000000,
+	FOG_DENSITY     : 0.0002,
+	PARTICLE_NUMBER : 500,
+	PARTICLE_SIZE   : 50,
+	PARTICLE_AREA   : 2000,
+	ROTATION_SPEED : 2,
+	PARTICLE_TYPE   : [
+		"img/eNXGj.png",
+		"img/eNXGj.png",
+		"img/eNXGj.png",
+		"lib/drifting/star.png",
+		"lib/drifting/star.png"
+	],
+	FRAME_RATE      : 20,
+	SPEED_MAX       : 40
+}
+
+var camera;
+var scene;
+var renderer;
+var container;
+var outerStars, outerRing, innerRing, innerClouds, outerClouds;
+var outerSystem, innerSystem,cloudSystem, cloudSystem2;
+
+var mouseDown;
+var mouseX;
+var mouseY;
+var speed = 0;
+var isPaused = false;
+
+function init() {
+	
+	camera = new THREE.PerspectiveCamera(config.CAMERA_FOV,
+	                                     config.CAMERA_ASPECT,
+	                                     config.CAMERA_NEAR,
+	                                     config.CAMERA_FAR);
+	camera.position.x = 2000;
+	camera.position.y = 2000;
+	camera.position.z = 2000;
+	camera.useQuaternion = true;
+
+	
+	scene = new THREE.Scene();
+	scene.fog = new THREE.FogExp2(config.FOG_COLOR, config.FOG_DENSITY);
+	scene.add(camera);
+	//camera.lookAt( THREE.Vector3(0,0,0) );
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	
+	container = document.getElementById(config.CONTAINER_ID);
+	container.appendChild(renderer.domElement);
+	
+	
+	
+	var starMaterial = new THREE.ParticleBasicMaterial({size : config.PARTICLE_SIZE,
+		                                                //map : THREE.ImageUtils.loadTexture("img/eNXGj.png"),
+		                                                map : THREE.ImageUtils.loadTexture("img/star.png"),
+		                                                color: 0xFFFFFF,
+		                                                blending : THREE.AdditiveBlending,
+		                                                vertexColors: true,
+		                                                depthTest : false,
+		                                                transparent : true});
+	starMaterial.color.setHSL(1.0, 0.0, 1.0);
+
+	var cloudMaterial = new THREE.ParticleBasicMaterial({
+		size: 300,
+		map: THREE.ImageUtils.loadTexture(
+			"img/cloud.png"
+		),
+		blending: THREE.AdditiveBlending,
+		vertexColors: true,
+		transparent: true,
+		depthTest: false
+	});
+	
+	//for(var j = 0; j < config.PARTICLE_TYPE.length; j++) {
+		/*
+		var material = new THREE.ParticleBasicMaterial({size : config.PARTICLE_SIZE,
+		                                                map : THREE.ImageUtils.loadTexture(config.PARTICLE_TYPE[j]),
+		                                                blending : THREE.AdditiveBlending,
+		                                                depthTest : false,
+		                                                transparent : true});
+		*/
+		outerStars = new THREE.Geometry();
+		var color = [];
+	    	for(var i = 0; i < config.PARTICLE_NUMBER/2; i++)
+	    	{
+	    		var radius = Math.random() * 5000 - 5000/2;
+				var z = Math.random() * (2 * radius) - radius;
+				var phi = Math.random() * Math.PI * 2;
+				var theta = Math.asin(z / radius);
+				
+				var pX = Math.cos(theta) * Math.cos(phi) * radius,
+					pY = Math.cos(theta) * Math.sin(phi) * radius,
+					pZ = z;
+				
+				outerStars.vertices.push(new THREE.Vector3(pX, pY, pZ));
+				color[i] = new THREE.Color(0xFFFFFF);
+			}
+		outerStars.colors = color; 
+		scene.add(new THREE.ParticleSystem(outerStars, starMaterial));
+
+		outerRing = new THREE.Geometry();
+		color = [];
+	    	for(var i = 0; i < config.PARTICLE_NUMBER; i++)
+	    	{
+	    		var angle = Math.random() * Math.PI * 2;
+	    		var radius = Math.random() * (config.PARTICLE_AREA/2) - config.PARTICLE_AREA/4;
+	    		radius = Math.random() * 200 + 400;
+				//var z = Math.random() * (2 * radius) - radius;
+				//var phi = Math.random() * Math.PI * 2;
+				//var theta = Math.asin(z / radius);
+				
+				var pX = Math.cos(angle) * radius,
+					pY = Math.random()*70-35,
+					pZ = Math.sin(angle) * radius;
+				
+				outerRing.vertices.push(new THREE.Vector3(pX, pY, pZ));
+				var h = Math.random() * (291 - 185) + 185,
+					s = Math.random() * (66 - 34) + 34,
+					v = Math.random() * (100 - 72) + 72;
+				color[i] = new THREE.Color(0xffffff);
+				color[i].setHSL(h / 360, s / 100, v / 100);
+			}
+		outerRing.colors = color; 
+		outerSystem = new THREE.ParticleSystem(outerRing, starMaterial);
+		outerSystem.sortParticles = true;
+		scene.add(outerSystem);
+
+		innerRing = new THREE.Geometry();
+		color = [];
+	    	for(var i = 0; i < config.PARTICLE_NUMBER; i++)
+	    	{
+	    		var angle = Math.random() * Math.PI * 2;
+				var radius = Math.random() * 350 + 1;
+				var pX = Math.cos(angle) * radius,
+					pY = Math.random() * 200 * (1 / radius) * (Math.random() > .5 ? 1 : -1),
+					pZ = Math.sin(angle) * radius;
+				
+				innerRing.vertices.push(new THREE.Vector3(pX, pY, pZ));
+				var h = Math.random() * (291 - 185) + 185,
+					s = Math.random() * (66 - 34) + 34,
+					v = Math.random() * (100 - 72) + 72;
+				color[i] = new THREE.Color(0xffffff);
+				color[i].setHSL(h / 360, s / 100, v / 100);
+			}
+		innerRing.colors = color; 
+		innerSystem = new THREE.ParticleSystem(innerRing, starMaterial);
+		innerSystem.sortParticles = true;
+		scene.add(innerSystem);
+
+
+		innerClouds = new THREE.Geometry();
+		color = [];
+		for (var p = 0; p < 200; p++) {
+			var angle = Math.random() * Math.PI * 2;
+			var radius = Math.random() * 350 + 1;
+			var pX = Math.cos(angle) * radius,
+				pY = Math.random() * 200 * (1 / radius) * (Math.random() > .5 ? 1 : -1),
+				pZ = Math.sin(angle) * radius;
+			innerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
+			
+			var h = Math.random() * (291 - 185) + 185,
+				s = Math.random() * (66 - 34) + 34,
+				v = Math.random() * (100 - 72) + 72;
+			color[p] = new THREE.Color(0xffffff);
+			color[p].setHSL(h / 360, s / 100, v / 100);
+		}
+		innerClouds.colors = color;
+		cloudSystem = new THREE.ParticleSystem(innerClouds, cloudMaterial);
+		cloudSystem.sortParticles = true;
+		scene.add(cloudSystem);
+
+
+		outerClouds = new THREE.Geometry();
+		color = [];
+		for(var p = 0; p < 200; p++) {
+			var angle = Math.random() * Math.PI * 2;
+			var radius = Math.random() * 200 + 400;
+			var pX = Math.cos(angle) * radius,
+				pY = Math.random() * 70 - 35,
+				pZ = Math.sin(angle) * radius;
+			outerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
+			
+			var h = Math.random() * (291 - 185) + 185,
+				s = Math.random() * (66 - 34) + 34,
+				v = Math.random() * (100 - 72) + 72;
+			color[p] = new THREE.Color(0xffffff);
+			color[p].setHSL(h / 360, s / 100, v / 100);
+		}
+		outerClouds.colors = color;
+		cloudSystem2 = new THREE.ParticleSystem(outerClouds, cloudMaterial);
+		cloudSystem2.sortParticles = true;
+		scene.add(cloudSystem2);
+	
+
+		//camera.lookAt( THREE.Vector3(0,0,0) );
+	//}
+	container.onmousemove = function ( e ) {
+		mouseX = e.clientX - renderer.domElement.width  / 2;
+		mouseY = e.clientY - renderer.domElement.height / 2;
+	}
+	container.onmousedown = function( e ) {
+		mouseDown = true;
+	}
+	container.onmouseup = function( e ) {
+		mouseDown = false;
+	}
+	rendering();
+	camera.lookAt(new THREE.Vector3(0, 0, 0) );
+}
+
+
+function rendering() {
+	
+	var rotateSpeed = 0; //0.003 before
+	if(mouseDown) {
+		if( speed < config.SPEED_MAX ) speed += 1;
+		//rotateSpeed = 0.003;
+	}
+	else {
+		if( speed > 0) speed -= 1;
+		speed = 0;
+	}
+	
+	cameraControll({moveZ: -speed, rotateY: -mouseX * rotateSpeed, rotateX: -mouseY * rotateSpeed});
+	
+	if(!isPaused ){
+		outerSystem.rotation.y += 0.0007*config.ROTATION_SPEED;
+		cloudSystem2.rotation.y += 0.0005*config.ROTATION_SPEED;
+		innerSystem.rotation.y += 0.0011*config.ROTATION_SPEED;
+		innerSystem.rotation.z = 0.3513*config.ROTATION_SPEED;
+		cloudSystem.rotation.y += 0.0011*config.ROTATION_SPEED;
+		cloudSystem.rotation.z = 0.3513*config.ROTATION_SPEED;
+	}
+
+	renderer.render(scene, camera);
+	setTimeout(rendering, 1000 / config.FRAME_RATE);
+}
+
+
+function cameraControll(param) {
+	
+	if(camera && camera.position) {
+		
+		var rx = (param.rotateX) ? param.rotateX : 0;
+		var ry = (param.rotateY) ? param.rotateY : 0;
+		var rz = (param.rotateZ) ? param.rotateZ : 0;
+		var mx = (param.moveX) ? param.moveX : 0;
+		var my = (param.moveY) ? param.moveY : 0;
+		var mz = (param.moveZ) ? param.moveZ : 0;
+		
+		var quaternion = new THREE.Quaternion().setFromEuler(new THREE.Vector3(rx, ry, rz));
+		camera.quaternion.multiply(quaternion);
+		camera.translateX(mx);
+		camera.translateY(my);
+		camera.translateZ(mz);
+	}
+	return false;
+}
+
+
+function addStars(){
+	var starMaterial = new THREE.ParticleBasicMaterial({
+			size: 20,
+			color: 0xFFFFFF,
+			map: THREE.ImageUtils.loadTexture(
+				"lib/drifting/star.png"
+			),
+			blending: THREE.AdditiveBlending,
+			//vertexColors: true,
+			//transparent: true,
+			//depthTest: false
+		});
+	var outerStars = new THREE.Geometry();
+	var color = [];
+		for(var p = 0; p < 1000; p++) {
+
+			var radius = Math.random() * 1000 + 1000;
+			var z = Math.random() * (2 * radius) - radius;
+			var phi = Math.random() * Math.PI * 2;
+			var theta = Math.asin(z / radius);
+			
+			var pX = Math.cos(theta) * Math.cos(phi) * radius,
+				pY = Math.cos(theta) * Math.sin(phi) * radius,
+				pZ = z;
+			//var particle = new THREE.Vector3(pX,pY,pZ);
+
+			var particle = new THREE.Vertex(
+					new THREE.Vector3(pX, pY, pZ)
+				);
+				
+			outerStars.vertices.push(particle);
+
+			color[p] = new THREE.Color(0xFFFFFF);
+		}
+		outerStars.colors = color;
+
+		var starSystem = new THREE.ParticleSystem(outerStars, starMaterial);
+		//this.starSystem.sortParticles = true;
+		scene.add(starSystem);
+
+}
+
+$(document).ready(function(){
+	init();
+});
+
+/* Fixes the difference between WebGL coordinates to CSS coordinates    */
+function toCSSMatrix(threeMat4, b) {
+  var a = threeMat4, f;
+  if (b) {
+    f = [
+      a.elements[0], -a.elements[1], a.elements[2], a.elements[3],
+      a.elements[4], -a.elements[5], a.elements[6], a.elements[7],
+      a.elements[8], -a.elements[9], a.elements[10], a.elements[11],
+      a.elements[12], -a.elements[13], a.elements[14], a.elements[15]
+    ];
+  } else {
+    f = [
+      a.elements[0], a.elements[1], a.elements[2], a.elements[3],
+      a.elements[4], a.elements[5], a.elements[6], a.elements[7],
+      a.elements[8], a.elements[9], a.elements[10], a.elements[11],
+      a.elements[12], a.elements[13], a.elements[14], a.elements[15]
+    ];                 
+  }
+  for (var e in f) {
+    f[e] = epsilon(f[e]);
+  }
+  return "matrix3d(" + f.join(",") + ")";
+}
+
+</script>
+<style>
+	body { margin:0; background:#000; overflow:hidden; }
+</style>
+</head>
+<body>
+
+
+<div id='world'></div>
+</body>
+</html>

@@ -19,11 +19,12 @@ var Crap = {
 	isPaused : true,
 	turnCallback : undefined,
 	turnTimeout : 100,
+	starmap : null,
 
 	init : function(divID,playerName) {
 		this.display = new ROT.Display({spacing:1.1});
 		this.container = divID;
-        $(this.container).append(this.display.getContainer());
+        //$(this.container).append(this.display.getContainer());
         this.player = Player;
         this.player.name = playerName;
         this.gameStarted = new Date;
@@ -37,7 +38,13 @@ var Crap = {
         this.player.drawCrew();
         //this.engine.start();
         this.resumeGame();
+
+        //init StarMap (and galaxy generator)
+        //TODO:: game should be paused until map is generated and running
+        this.starmap = new StarMap(divID);
+        this.starmap.init();
         
+        UI.bind_map();
 	},
 
 	//player entered a sector (system/planet/area). generate the appropriate ROT map and load it

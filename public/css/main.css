@@ -1,7 +1,7 @@
 body {
 	background-color: black;
 	color: #ccc;
-	background-image: url('/drifting/img/space_bg.jpg');
+	background-image: url('../img/space_bg.jpg');
 	background-repeat: repeat;
 }
 
@@ -47,6 +47,25 @@ header a.logo {
 	text-align: center;
 	vertical-align:middle;
 	overflow-y: auto;
+	float: left;
+	margin-left: 200px;
+	position: absolute;
+}
+
+div.canvas_overlay {
+	position: absolute;
+	float: left;
+	width: 800px;
+	height: 600px;
+	margin: 0px;
+	border: 0px;
+	padding: 0px;
+	z-index: 800;
+}
+
+div.canvas_overlay  a {
+	color: rgb(170, 217, 244);
+	text-decoration: underline;
 }
 
 #menu_article {

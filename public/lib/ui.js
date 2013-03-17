@@ -112,6 +112,16 @@ UI.roll_player = function(crap) {
 }
 
 
+/** bind events for map control / overlay **/
+
+UI.bind_map = function(){
+	$('#overlay_cur_star').bind('click',function(evt){
+		Crap.starmap.zoomStar( parseInt( $(this).attr('data-id') ) );
+	});
+	$('#overlay_cur_galaxy').bind('click',function(evt){
+		Crap.starmap.resetCam();
+	});
+}
 
 
 
