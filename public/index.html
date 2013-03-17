@@ -78,7 +78,7 @@ $(document).ready(function(){
 				<li><a href="#play_section">Play</a></li>
 			</ul>
 			<ul>
-				<li><a href="#about_section">About</a></li>
+				<li><a href="#instructions_section">Instructions</a></li>
 			</ul>
 		</nav>
 	</header>
@@ -89,7 +89,7 @@ $(document).ready(function(){
 		<header class="grid col-full">
 			<hr>
 			<p class="fleft">Home</p>
-			<a href="about.html" class="arrow fright">see more infos</a>
+			<a href="#home" class="arrow fright">Go to top</a>
 		</header>
 		
 		<div class="grid col-one-half mq2-col-full">
@@ -102,7 +102,11 @@ $(document).ready(function(){
 			</p>
 		</div>
 			
-	
+		<div class="grid col-one-quarter mq2-col-full" style='text-align:center;'>
+			<img src='img/shippy_move2.png' style='width:120px;' />
+		</div>
+
+	<!--
 		 <div class="slider grid col-one-half mq2-col-full">
 		   <div class="flexslider">
 		     <div class="slides">
@@ -132,6 +136,7 @@ $(document).ready(function(){
 		            </div>
 		   </div>
 		 </div>
+	-->
 		
 		 </section>
 	
@@ -139,6 +144,7 @@ $(document).ready(function(){
 		<header class="grid col-full">
 			<hr>
 			<p class="fleft">Play Drifting</p>
+			<a href="#home" class="arrow fright">Go to top</a>
 		</header>
 
 		<article class="grid col-three-quarters mq3-col-full">
@@ -150,7 +156,7 @@ $(document).ready(function(){
 				</div>
 
 				<div id='star_overlay' class='canvas_overlay'>
-					<h4>Location: <b><a id='overlay_cur_galaxy' data-id='galaxy'>Milky Way</a></b> -> <b><a id='overlay_cur_star' data-id='1'>Outer X10</a></b></h4>
+					<h4><b><a id='overlay_cur_galaxy' data-id='galaxy'>Milky Way</a></b> -> <b><a id='overlay_cur_star' data-id='1'>Outer X10</a></b></h4>
 				</div>
 			</div>
 	
@@ -188,64 +194,26 @@ $(document).ready(function(){
 		
 	</section>
 
-<section class="works grid-wrap">
+<section class="works grid-wrap" id="instructions_section">
 	<header class="grid col-full">
 			<hr>
-			<p class="fleft">Works</p>
-			<a href="works.html" class="arrow fright">see more works</a>
+			<p class="fleft">Instructions</p>
+			<a href="#home" class="arrow fright">Go to top</a>
 		</header>
 	
-			<figure class="grid col-one-quarter mq2-col-one-half">
-				<a href="work1.html">
-				<img src="img/img.jpg" alt="">
-				<span class="zoom"></span>
-				</a>
-				<figcaption>
-					<a href="work1.html" class="arrow">Project page!</a>
-					<p>Lorem ipsum dolor set amet</p>
-				</figcaption>
-			</figure>
-
-			<figure class="grid col-one-quarter mq2-col-one-half">
-				<a href="#">
-				<img src="img/img.jpg" alt="">
-				<span class="zoom"></span>
-				</a>
-				<figcaption>
-					<a href="#" class="arrow">Project x</a>
-					<p>Lorem ipsum dolor set amet</p>
-				</figcaption>
-			</figure>
 		
-			<figure class="grid col-one-quarter mq2-col-one-half">
-				<a href="#">
-				<img src="img/img.jpg" alt="">
-				<span class="zoom"></span>
-				</a>
-				<figcaption>
-					<a href="#" class="arrow">Project x</a>
-					<p>Lorem ipsum dolor set amet</p>
-				</figcaption>
-			</figure>
-		
-			<figure class="grid col-one-quarter mq2-col-one-half">
-				<a href="#">
-				<img src="img/img.jpg" alt="">
-				<span class="zoom"></span>
-				</a>
-				<figcaption>
-					<a href="#" class="arrow">Project x</a>
-					<p>Lorem ipsum dolor set amet</p>
-				</figcaption>
-			</figure>
 	</section>
 	</div> <!--main-->
 
 <div class="divide-top">
 	<footer class="grid-wrap">
 		<ul class="grid col-one-third social">
+			<li><a href="http://ryanguthrie.com">Built By Ryan Guthrie</a></li>
+			<li><a href="http://7drl.org">Started for 7 Day Roguelike</a></li>
+			<!--
 			<li><a href="#">Facebook</a></li>
 			<li><a href="#">Twitter</a></li>
+			-->
 		</ul>
 	
 		<div class="up grid col-one-third ">
@@ -254,9 +222,9 @@ $(document).ready(function(){
 		
 		<nav class="grid col-one-third ">
 			<ul>
-				<li><a href="index.html">Play</a></li>
-				<li><a href="about.html">About</a></li>
-				<li><a href="works.html">Works</a></li>
+				<li><a href="#play_section">Play</a></li>
+				<li><a href="#about_section">About</a></li>
+				<li><a href="#instructions_section">Instructions</a></li>
 			</ul>
 		</nav>
 	</footer>

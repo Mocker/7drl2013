@@ -22,7 +22,9 @@ var MAP_CONFIG = {
 	FOG_COLOR : 0x000000,
 	FOG_DENSITY : 0.0002,
 	PARTICLE_AREA : 2000,
-	MAP_OVERLAY : '#star_overlay'
+	MAP_OVERLAY : '#star_overlay',
+	CLOUD_PARICLES : 200,
+	CLOUD_SIZE : 300,
 };
 
 function StarMap(divID){
@@ -56,7 +58,7 @@ function StarMap(divID){
 													MAP_CONFIG.CAMERA_ASPECT, 
 													MAP_CONFIG.CAMERA_NEAR, 
 													MAP_CONFIG.CAMERA_FAR );
-		this.camera_orig = new THREE.Vector3(1500,1500,1000);
+		this.camera_orig = new THREE.Vector3(1000,1000,800);
 		this.camera.position = new THREE.Vector3(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
         //this.camera.position.z = 1000;
         //this.camera.position.y = 1500;
@@ -208,6 +210,51 @@ function StarMap(divID){
 		this.scene.add(this.innerSystem);
 
 
+		/*** CLOUDS ****/
+		this.innerClouds = new THREE.Geometry();
+		color = [];
+		for (var p = 0; p < MAP_CONFIG.CLOUD_PARTICLES; p++) {
+			var angle = Math.random() * Math.PI * 2;
+			var radius = Math.random() * 350 + 1;
+			var pX = Math.cos(angle) * radius,
+				pY = Math.random() * 200 * (1 / radius) * (Math.random() > .5 ? 1 : -1),
+				pZ = Math.sin(angle) * radius;
+			this.innerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
+			
+			var h = Math.random() * (291 - 185) + 185,
+				s = Math.random() * (66 - 34) + 34,
+				v = Math.random() * (100 - 72) + 72;
+			color[p] = new THREE.Color(0xffffff);
+			color[p].setHSL(h / 360, s / 100, v / 100);
+		}
+		this.innerClouds.colors = color;
+		this.cloudSystem = new THREE.ParticleSystem(this.innerClouds, this.cloudMaterial);
+		this.cloudSystem.sortParticles = true;
+		this.scene.add(this.cloudSystem);
+
+
+		this.outerClouds = new THREE.Geometry();
+		color = [];
+		for(var p = 0; p < MAP_CONFIG.CLOUD_PARTICLES; p++) {
+			var angle = Math.random() * Math.PI * 2;
+			var radius = Math.random() * 200 + 400;
+			var pX = Math.cos(angle) * radius,
+				pY = Math.random() * 70 - 35,
+				pZ = Math.sin(angle) * radius;
+			this.outerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
+			
+			var h = Math.random() * (291 - 185) + 185,
+				s = Math.random() * (66 - 34) + 34,
+				v = Math.random() * (100 - 72) + 72;
+			color[p] = new THREE.Color(0xffffff);
+			color[p].setHSL(h / 360, s / 100, v / 100);
+		}
+		this.outerClouds.colors = color;
+		this.cloudSystem2 = new THREE.ParticleSystem(this.outerClouds, this.cloudMaterial);
+		this.cloudSystem2.sortParticles = true;
+		this.scene.add(this.cloudSystem2);
+
+
 		
 	}; //done adding stars
 
@@ -217,11 +264,11 @@ function StarMap(divID){
 
 		if(self.animationPaused==false ){
 			self.outerSystem.rotation.y += 0.0007*MAP_CONFIG.ROTATE_SPEED;
-			//this.cloudSystem2.rotation.y += 0.0005*MAP_CONFIG.ROTATION_SPEED;
+			//self.cloudSystem2.rotation.y += 0.0005*MAP_CONFIG.ROTATION_SPEED;
 			self.innerSystem.rotation.y += 0.0011*MAP_CONFIG.ROTATE_SPEED;
 			self.innerSystem.rotation.z = 0.3513*MAP_CONFIG.ROTATE_SPEED;
-			//this.cloudSystem.rotation.y += 0.0011*MAP_CONFIG.ROTATION_SPEED;
-			//this.cloudSystem.rotation.z = 0.3513*MAP_CONFIG.ROTATION_SPEED;
+			//self.cloudSystem.rotation.y += 0.0011*MAP_CONFIG.ROTATION_SPEED;
+			//self.cloudSystem.rotation.z = 0.3513*MAP_CONFIG.ROTATION_SPEED;
 
 			if(self.camera_track != 'origin' && self.camera_track){
 				//console.log(self.camera_track);
@@ -245,12 +292,20 @@ function StarMap(divID){
 		this.camera.lookAt(this.stars.outer[starID].pos);
 		this.cameraControll({moveZ:-1000});
 		this.camera_track = parseInt(starID);
+		this.outerSystem.rotation.y = 0;
+		this.innerSystem.rotation.y = 0;
+		this.innerSystem.rotation.z = 0;
+		//this.cloudSystem.rotation.y = 0;
+		//this.cloudSystem.rotation.z = 0;
+		//this.cloudSystem2.rotation.y = 0;
+		this.animationPaused = true;
 	}
 
 	this.resetCam = function(){
 		this.camera.position = new THREE.Vector3(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
 		this.camera.lookAt(new THREE.Vector3(0,0,0));
 		this.camera_track = 'origin';
+		this.animationPaused = false;
 	}
 
 	this.cameraControll = function(param) {
