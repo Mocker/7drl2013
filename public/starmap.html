@@ -5,6 +5,7 @@
 <script src="lib/three.min.js" type="text/javascript"></script>
 <script src="lib/jquery-1.9.1.min.js" type="text/javascript"></script>
 <script src="lib/TrackballControls.js" type="text/javascript"></script>
+<script src="lib/drifting/spiral_galaxy.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 $ = jQuery;
@@ -36,6 +37,7 @@ var config = {
 	MIN_OUTERSTARS : 50,
 	CLOUD_PARTICLES : 200,
 	CLOUD_SIZE : 300,
+	ORIGIN : new THREE.Vector3(0, 0, 0),
 }
 
 var screenWidth, screenHeight;
@@ -60,9 +62,10 @@ var mouseY;
 var speed = 0;
 var isPaused = true;
 
-var curGalaxy = 'polar';
+var curGalaxy = 'spiral';
 var galLoaders = { 
-		'polar' : createPolarGalaxy
+		'polar' : createPolarGalaxy,
+		'spiral' : createSpiralGalaxy,
 		};
 var galObjects = [];
 var galRender = undefined; //callback function for onRender calls to galaxy
@@ -287,6 +290,7 @@ function createPolarGalaxy(){
 					ring : 'outer',
 					name : getName(3,15,'',''),
 					hsl : [h/360, s/100, v/100],
+					mass : 1.0,
 					color : color[i],
 					type : 'stage 3 blackhole',
 					pos : {x:pX, y:pY, z:pZ}
@@ -312,6 +316,7 @@ function createPolarGalaxy(){
 
 				starCount++;
 			}
+			$('.starLabel').hide();
 			
 		outerRing.colors = color; 
 		outerSystem = new THREE.ParticleSystem(outerRing, starMaterial);
@@ -575,9 +580,13 @@ function toCSSMatrix(threeMat4, b) {
             height: 100%;
             -webkit-transform-style: preserve-3d;
             -moz-transform-style: preserve-3d;
-            pointer-events:all;
+            
         }
         
+		#css-camera div {
+			pointer-events:all;
+		}
+
         #shape
         {
             -webkit-transform-style: preserve-3d;
@@ -655,6 +664,30 @@ function toCSSMatrix(threeMat4, b) {
 </div>
 <div id='cfg_spiral' class='cfg_panel'>
 <h3>Configure Spiral Galaxy</h3>
+	<script type="text/javascript">
+		function updateSpiral(){
+			spiralConfig.MINSTARS = parseInt( $('#spiral_min').val() );
+			spiralConfig.MAXSTARS = parseInt( $('#spiral_max').val() );
+			spiralConfig.NUM_SPIRALS = parseInt( $('#spiral_spirals').val() );
+			spiralConfig.SPIRAL_RADIUS = parseInt( $('#spiral_radius').val() );
+			spiralConfig.SPIRAL_SPREAD = parseInt( $('#spiral_spread').val() );
+			spiralConfig.CLOUD_RADIUS = parseInt( $('#spiral_cloud_radius').val() );
+			clearScene();
+			curGalaxy = 'spiral';
+			galLoaders[curGalaxy]();
+		}
+	</script>
+	<i><b>Spiral galaxies</b> consist of a flat, rotating disk containing stars, gas and dust, and a central concentration of stars known as the bulge. These are surrounded by a much fainter halo of stars, many of which reside in globular clusters.</i>
+
+	<p>
+		Stars : <input id='spiral_min' value='3000' size=6> to <input id='spiral_max' value='4000' size=6><br>
+		Spirals : <input id='spiral_spirals' value='2' size=3><br>
+		Spiral Radius : <input id='spiral_radius' value='1000' size=5><br>
+		Spread : <input id='spiral_spread' value='200' size=5><br>
+		Cloud Radius : <input id='spiral_cloud_radius' value='200' size=5><br>
+
+	</p>
+	<button id='btn_update_spiral' onClick='updateSpiral();'>Create</button>
 
 </div>
 
@@ -823,6 +856,23 @@ function getName(minlength, maxlength, prefix, suffix)
 	name = name.charAt(0).toUpperCase() + name.substring(1, name.length) + suffix;
 	return name;
 }
+</script>
+
+
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-39328997-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; 
+    s.parentNode.insertBefore(ga, s);
+  })();
+
 </script>
 
 </body>
