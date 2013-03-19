@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+
+	<head>
+		<title>Error 404 - Not Found</title>
+		<link rel="stylesheet" href="http://www.fromlifetodeath.com/views/styles/reset.css" />
+		<link rel="stylesheet" href="http://www.fromlifetodeath.com/views/fonts/stylesheet.css" />
+		<link rel="stylesheet" href="http://www.fromlifetodeath.com/views/styles/style.css" />
+		<link rel="shortcut icon" href="http://www.fromlifetodeath.com/views/images/fltdFavIcon.png" />
+	</head>
+	
+	<body>
+	
+		<div id="wrapper">
+			
+			<ul id="mainNav">
+				<li><a href="/articles/">Musings</a></li>
+				<li><a href="/projects/">Projects</a></li>
+				<li><a href="/about/">About</a></li>
+				<li><a href="/contact/">Contact</a></li>
+				<li class="link"><a href="https://github.com/robertkleffner">GitHub</a></li>
+				<li class="link"><a href="http://www.youtube.com/user/robertkleffner">YouTube</a></li>
+				<li class="link"><a href="http://twitter.com/#!/fltdsite">Twitter</a></li>
+				<li class="link"><a href="http://www.facebook.com/fromlifetodeath">Facebook</a></li>
+				<li class="link"><a href="https://plus.google.com/106425151001395277159">Google+</a></li>
+			</ul>
+			
+			<a href="/"><div id="header"></div></a>			<div id="content">
+				<div id="mainColumn">
+					<div class="post">
+			<h2>Error 404: Are you lost?</h2>
+			<div class="postContent">
+			<p>The page you were looking for could not be found!</p>
+			<p>Click <a href="http://www.fromlifetodeath.com">here</a> to go back to the main page.</p>
+			</div>
+			</div>				</div>
+			</div>
+			
+			<div id="secColumn">
+							</div>		</div><br class="clear" />
+		<div id="footer">
+			<div class="footerContent">
+				<div class="footerLeft">
+					<p>Site:</p><p><a href="/articles/">Musings</a></p><p><a href="/projects/">Projects</a></p><p><a href="/about/">About</a></p><p><a href="/contact/">Contact</a></p><br class="clear" />
+					<p>Social:</p><p><a href="http://www.facebook.com/fromlifetodeath">Facebook</a></p><p><a href="http://twitter.com/#!/fltdsite">Twitter</a></p><p><a href="http://www.youtube.com/user/robertkleffner">YouTube</a></p><p><a href="https://github.com/robertkleffner">GitHub</a></p>
+				</div>
+				<div class="footerRight">
+					From Life to Death.<br /><span class="small">Copyright &copy; 2011 Robert Kleffner. All Rights Reserved.</span>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+
+			  var _gaq = _gaq || [];
+			  _gaq.push(['_setAccount', 'UA-20578351-1']);
+			  _gaq.push(['_trackPageview']);
+
+			  (function() {
+				var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			  })();
+
+		</script>
+	</body>
+</html>
