@@ -199,16 +199,19 @@ var starCanvas = {
 		this.animate();
 		this.render();
 
+		this.isPaused = false;
 		this.renderTO = setInterval(this.render, 1000/ config.FRAME_RATE);
 	},
 
 	clearStar : function(){
 		if(!this['isStarCanvas']) this=starCanvas; 
+		
+		//this.objs = {};
 		this.renderTO = null;
 		this.starID = null;
 		this.isPaused = true;
-		for(var i=1;i<this.scene.children;i++){
-			this.scene.remove(this.scene.children[i]);
+		for(var i=starCanvas.scene.children.length-1;i>0;i--){
+			starCanvas.scene.remove( starCanvas.scene.children[i]);
 		}
 	},
 
