@@ -134,6 +134,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	this.rotateCamera = function () {
 
+		
+
 		var angle = Math.acos( _rotateStart.dot( _rotateEnd ) / _rotateStart.length() / _rotateEnd.length() );
 
 		if ( angle ) {
@@ -350,6 +352,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 		event.preventDefault();
 		event.stopPropagation();
 
+
+
 		if ( _state === STATE.NONE ) {
 
 			_state = event.button;
@@ -381,6 +385,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 		event.preventDefault();
 		event.stopPropagation();
+
+
 
 		if ( _state === STATE.ROTATE && !_this.noRotate ) {
 

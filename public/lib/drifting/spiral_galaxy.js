@@ -35,19 +35,22 @@ function createSpiralGalaxy()
 	stars = [];
 	var starCount = 0;
 
+	
 	var spiralGeo = new THREE.Geometry();
 	var numStars = Math.floor(Math.random()*spiralConfig.MINSTARS)+(spiralConfig.MAXSTARS-spiralConfig.MINSTARS);
 	console.log("Generating "+numStars+" stars");
 	galObjects = [];
 	var pX=1, pY=1;
-	for(var i=0; i<numStars; i++)
+	var trackStars = Math.floor(numStars / config.MAX_TRACKED);
+	//numStars = 0; //use generateSpiralArms
+	for(var i=0; i<0; i++)
 	{
 		do {
             pX = random()*2-1;
             pY = random()*2-1;
         } while( pX*pX + pY*pY > random()*0.3);
         var pZ = log(random()) * (random() > 0.5 ? 0.1 : -0.1),
-        mass = random()+1.0;
+        mass = (random()*50*random())+1.0;
         pX = pX * spiralConfig.SPIRAL_RADIUS; pY = pY*spiralConfig.SPIRAL_RADIUS; 
 
         //console.log("Placing at ",pX,pY,pZ);
@@ -67,20 +70,9 @@ function createSpiralGalaxy()
 		//color[i].setHSL(h / 360, s / 100, v / 100);
 		//color[i].setHSL( (i/numStars)*291, s / 100, v / 100);
 		//color[i].setRGB( (pX/1000+0.5), 0.2, 0.2 );
-		color[i].setHSL( dist/1000, s/100, (mass-1)+0.5 );
+		//color[i].setHSL( h*dist/1000, s/100, (mass-1)+0.5 );
 
-		stars[starCount] = {
-			index : starCount,
-			spiral : 1,
-			mass : mass,
-			name : getName(3,15,'',''),
-			hsl : [h/360, s/100, v/100],
-			color : color[i],
-			type : 'collapsed nova',
-			pos : pos
-		};
-
-		starCount++;
+		
         
 	}
 	console.log("Done generating stars");
@@ -94,6 +86,41 @@ function createSpiralGalaxy()
 	generateSpiralArms(spiralConfig.NUM_SPIRALS,numStars, 0.8);
 	//generateSpiralArm(numStars/2, 0.3);
 	//galObjects[1].rotation.y = 0.4;
+
+	//create routeMap
+	routeMap = [];
+	var max_routes = 3;
+	var routeGeo = new THREE.Geometry();
+	for(var s=0;s<stars.length;s++)
+	{
+		//routeGeo.vertices.push(stars[s].pos );
+		var route_num = Math.random()*Math.random()*5+1;
+		var rGeo = new THREE.Geometry();
+		rGeo.vertices.push( stars[s].pos );
+		for(var r=0;r<route_num;r++)
+		{
+			var sid = Math.floor(Math.random()*stars.length);
+			if(sid == s) continue;
+			if(!stars[sid]) continue;
+			if(stars[sid]['routes'] && stars[sid]['routes'][s]) continue; //already has route to this star
+			if(!stars[s]['routes'] ) stars[s]['routes'] = {};
+			if(!stars[sid]['routes'] ) stars[sid]['routes'] = {};
+			stars[s]['routes'][sid] = 1;
+			stars[sid]['routes'][s] = 1;
+			var geo = new THREE.Geometry();
+			
+			rGeo.vertices.push( stars[sid].pos );
+			rGeo.vertices.push( stars[s].pos );
+			
+		}
+		var line = new THREE.Line(rGeo, routeMapLineMat );
+		line.visible = false;
+		routeMap.push(line);
+	}
+
+	for(var r=0; r<routeMap.length;r++){
+		scene.add(routeMap[r]);
+	}
 
 	//create clouds
 	innerClouds = new THREE.Geometry();
@@ -138,6 +165,7 @@ function renderSpiral() {
 
 function removeSpiral(){
 	clearScene();
+	routeMap = [];
 	spiral = undefined;
 	innerClouds = undefined;
 	cloudSystem = undefined;
@@ -153,7 +181,12 @@ function generateSpiralArms(numArms,numStars, h){
 	var fAngularSpread = spread / numArms; //180 / (numOfArms * 2)
 	var rotation = 1;
 	var color = [];
+	var basicMat = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+	
 
+
+	var trackStars = Math.floor( (numStars * numArms) / config.MAX_TRACKED );
+	var starCount = 0;
 	for(var arm=0;arm<numArms; arm++){
 		var armgeo = new THREE.Geometry();
 		var hue = (30/360) * ((arm)/numArms) + 0.05;
@@ -168,9 +201,12 @@ function generateSpiralArms(numArms,numStars, h){
 			var fA = arm * (fArmAngle);
 			var fX = fR * Math.cos( deg2rads(fA+fR*fK+fQ) ) ;
 			var fY = fR * Math.sin( deg2rads(fA+fR*fK+fQ) ) ;
+			var fZ = random()*10-5;
 
+			var mass = (random()*50*random())+1.0;
 
-			armgeo.vertices.push( new THREE.Vector3(fX, fY, 0) );
+			var pos = new THREE.Vector3(fX, fY, fZ);
+			armgeo.vertices.push( pos);
 			var c = new THREE.Color();
 			//c.setHSL = (hue, 0.8, (i/numStars)+0.3 );
 			//c.setRGB(hue,0,0);
@@ -178,15 +214,55 @@ function generateSpiralArms(numArms,numStars, h){
 			color[i] = c;
 			color[i].setHSL( hue, 1, 0.85);
 
+
+
 			if(i<5){
-				console.log("Generated star "+i+" of "+numStars,fR,fQ,fX,fY);
+				//console.log("Generated star "+i+" of "+numStars,fR,fQ,fX,fY);
 			}
+
+			if(i % trackStars ){
+				continue;
+			}
+
+			stars[starCount] = {
+				index : starCount,
+				spiral : 1,
+				mass : mass,
+				name : getName(3,15,'',''),
+				hsl : [hue, 1, 0.85],
+				color : color[i],
+				type : 'collapsed nova',
+				pos : pos
+			};
+
+			//create html text label and update it to match this item
+			var starLabel = document.createElement('div');
+			starLabel.id = 'star_'+starCount;
+			starLabel.className = 'starLabel';
+			starLabel.innerHTML = stars[starCount].name ;
+			$('#css-camera').append(starLabel);
+			stars[starCount].starLabel = starLabel;
+			var geo = new THREE.CubeGeometry(50,50,50);
+			var mesh = new THREE.Mesh( geo, basicMat);
+			mesh.position.set( fX, fY, fZ-50 );
+			mesh.rotation.x = 1.5;
+			//var gyro = new THREE.Gyroscope(); //gyro should make label billboarded so it faces user but not working
+			stars[starCount].mesh = mesh;
+			//scene.add(mesh);
+			setDivPosition(starLabel, stars[starCount].mesh );
+
+			starCount++;
 		}
 		armgeo.colors = color;
 		var arms = new THREE.ParticleSystem(armgeo, starMaterial);
 		arms.sortParticles = true;
 		galObjects.push(arms);
 		scene.add(arms);
+
+		$('.starLabel').hide();
+		$('div.starLabel').unbind('click').click(function(){ displayStar(this); })
+		//var line = new THREE.Line(armgeo, routeMapLineMat );
+		//scene.add(line);
 	}
 	
 
