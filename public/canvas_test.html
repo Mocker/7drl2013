@@ -1,0 +1,177 @@
+<html>
+<head>
+<title>Drifting - Procedural Ship Test </title>
+
+<script src="lib/three.min.js" type="text/javascript"></script>
+<script src="lib/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="lib/TrackballControls.js" type="text/javascript"></script>
+<script src="lib/CurveExtras.js" type="text/javascript"></script>
+<script src="lib/ParametricGeometries.js" type="text/javascript"></script>
+<script src="lib/rot.js" type="text/javascript"></script>
+<script src="lib/seedrandom.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+	$ = jQuery;
+
+	//setup 2D and 3D canvas
+	var container;
+	var TWOD = {
+		camera : null,
+		scene : null,
+		renderer : null,
+		canvas : null,
+		context : null,
+		controls: null,
+		config : {
+			
+		}
+	};
+
+	var THREED = {
+		camera : null,
+		scene : null,
+		renderer : null,
+		canvas : null,
+		controls : null,
+		config : {
+			CAMERA_FOV      : 45,
+			CAMERA_ASPECT   : window.innerWidth / window.innerHeight,
+			CAMERA_NEAR     : 1,
+			CAMERA_FAR      : 5000,
+			FRAME_RATE : 20, //fps for the render callback
+		},
+		animates : [],
+		renders : [],
+		defaultSphere : null,
+		animate : function(){
+			requestAnimationFrame( THREED.animate );
+			THREED.controls.update();
+
+			if(THREED.animates.length > 0){
+				THREED.animates[0](); //todo - should loop through callbacks for each animate frame
+			}
+		},
+		render : function(){
+
+			if(THREED.renders.length > 0){
+				THREED.renders[0]();
+			}
+
+			THREED.renderer.render(THREED.scene, THREED.camera);
+		},
+		renderTO : null,
+	};
+
+
+	$(document).ready(function(){
+		//generate 2d/3d canvases
+		THREED.camera = new THREE.PerspectiveCamera(
+										THREED.config.CAMERA_FOV,
+	                                     THREED.config.CAMERA_ASPECT,
+	                                     THREED.config.CAMERA_NEAR,
+	                                     THREED.config.CAMERA_FAR);
+		THREED.camera.position.x = 1000;
+		THREED.camera.position.y = 1000;
+		THREED.camera.position.z = 1000;
+		THREED.camera.useQuaternion = true; 
+		THREED.scene = new THREE.Scene();
+		THREED.renderer = new THREE.WebGLRenderer();
+		THREED.renderer.setSize(window.innerWidth, window.innerHeight);
+	
+		container = document.getElementById('canvas_box');
+		container.appendChild(THREED.renderer.domElement);
+		THREED.controls = new THREE.TrackballControls( THREED.camera, document.getElementById('canvas_box') );
+		THREED.controls.target.set( 0, 0 , 0);
+		THREED.controls.rotateSpeed = 1.0;
+		THREED.controls.zoomSpeed = 1.2;
+		THREED.controls.panSpeed = 0.8;
+		THREED.controls.noZoom = false;
+		THREED.controls.noPan = false;
+		THREED.controls.staticMoving = true;
+		THREED.controls.dynamicDampingFactor = 0.3;
+		THREED.controls.keys = [ 65, 83, 68 ];
+
+		var basicMat = new THREE.MeshBasicMaterial( { color: 0x908833, wireframe: true } );
+		THREED.defaultSphere = new THREE.Mesh( new THREE.SphereGeometry(250, 64, 32), basicMat);
+		THREED.scene.add(THREED.defaultSphere);
+		THREED.camera.lookAt(new THREE.Vector3(0,0,0));
+
+		THREED.animate();
+		THREED.render();
+		THREED.renderTO = setInterval(THREED.render, 1000/THREED.config.FRAME_RATE);
+
+	});
+
+//function chooser changed - call relevant function
+function slChange(sl){
+	switch($(sl).val())
+	{
+		case '3D Shape Test':
+			console.log('3d shape test');
+			break;
+
+		default:
+			console.log('no matching routine for '+$(sl).val());
+	}
+}
+
+</script>
+
+<style>
+body {
+	margin: 0px;
+	padding:0px;
+}
+
+#canvas_box {
+	position: fixed;
+	overflow: hidden;
+	z-index: 20;
+	width: 100%;
+	height: 100%;
+	color: white;
+	background-color: black;
+	}
+#overlay_container {
+	position: fixed;
+	overflow: hidden;
+	z-index: 100;
+	width: 100%;
+	height: 100%;
+	color: white;
+	pointer-events:none;
+}
+#overlay_container div {
+	z-index: 200;
+	pointer-events:auto;
+}
+</style>
+</head>
+<body>
+
+<div id='canvas_box'>
+
+</div>
+<div id='overlay_container'>
+
+	<div style='float: left'>
+		<h2>Procedural Ship Test </h2>
+	</div>
+	<div style='float:left; top:20px; margin-left:15px;'>
+		<select id='slFunction' onChange='slChange(this);'>
+			<option value='none'>Select test..</option>
+			<option value='2D Sprites'>2D Sprites</option>
+			<option value='2D Diggers'>2D Diggers</option>
+			<option value='3D Diggers'>3D Diggers</option>
+			<option value='3D Legos'>3D Legos</option>
+			<option value='3D Shape Test'>3D Shape Test</option>
+		</select>
+	</div>
+
+	<div id='overlay_status' style='position:fixed; bottom:20px; margin-left:40%; width:200px'>
+		<h3 id='h3_status'>Loading Renderers..</h3>
+	</div>
+
+</div>
+</body>
+</html>

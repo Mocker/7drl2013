@@ -7,10 +7,10 @@ inspiration is : http://workshop.chromeexperiments.com/stars/
 
 ***/
 var MAP_CONFIG = {
-	MAX_INNERSTARS : 1000,
-	MIN_INNERSTARS : 400,
-	MAX_OUTERSTARS : 800,
-	MIN_OUTERSTARS : 200,
+	MAX_INNERSTARS : 500,
+	MIN_INNERSTARS : 100,
+	//MAX_OUTERSTARS : 800,
+	//MIN_OUTERSTARS : 200,
 	SPRITE_STAR : "img/star.png",
 	SPRITE_CLOUD : "img/cloud.png",
 	PARTICLE_SIZE : 50,
@@ -38,10 +38,11 @@ function StarMap(divID){
 	this.animationPaused = false;
 	this.camera, this.scene, this.renderer;
 	this.geometry, this.material, this.mesh, this.camera_track;
+	this.galObjs = [];
+	this.arms = [];
 
 	this.stars = { 
-		outer:[], 
-		inner : [] };
+		 };
 
 	var self = this;
 
@@ -58,7 +59,7 @@ function StarMap(divID){
 													MAP_CONFIG.CAMERA_ASPECT, 
 													MAP_CONFIG.CAMERA_NEAR, 
 													MAP_CONFIG.CAMERA_FAR );
-		this.camera_orig = new THREE.Vector3(1000,1000,800);
+		this.camera_orig = new THREE.Vector3(100,800,1000);
 		this.camera.position = new THREE.Vector3(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
         //this.camera.position.z = 1000;
         //this.camera.position.y = 1500;
@@ -72,6 +73,20 @@ function StarMap(divID){
 
         this.clear2D(); this.drawNotice("Generating Galaxy");
         this.addStars();
+
+        this.controls = new THREE.TrackballControls( this.camera, document.getElementById(this.container.substr(1)) );
+		this.controls.target.set( 0, 0 , 0);
+		this.controls.rotateSpeed = 1.0;
+		this.controls.zoomSpeed = 1.2;
+		this.controls.panSpeed = 0.8;
+
+		this.controls.noZoom = false;
+		this.controls.noPan = false;
+
+		this.controls.staticMoving = true;
+		this.controls.dynamicDampingFactor = 0.3;
+
+		this.controls.keys = [ 65, 83, 68 ];
 
         
         this.animate();
@@ -95,7 +110,7 @@ function StarMap(divID){
                     vertexColors: true,
                     depthTest : false,
                     transparent : true});
-		this.starMaterial.color.setHSL(1.0, 0.0, 1.0);
+		this.starMaterial.color.setHSL(1.0, 0.0, 0.8);
 
 		this.cloudMaterial = new THREE.ParticleBasicMaterial({
 			size: 300,
@@ -112,7 +127,7 @@ function StarMap(divID){
 		var color = [];
 		for(var i = 0; i < 1000; i++)
 		{
-			var radius = Math.random() * 5000 - 5000/2;
+			var radius = Math.random() * 3000 + 1500 ;
 			var z = Math.random() * (2 * radius) - radius;
 			var phi = Math.random() * Math.PI * 2;
 			var theta = Math.asin(z / radius);
@@ -125,158 +140,143 @@ function StarMap(divID){
 			color[i] = new THREE.Color(0xFFFFFF);
 		}
 		this.outerStars.colors = color; 
-		this.scene.add(new THREE.ParticleSystem(this.outerStars, this.starMaterial));
+		this.outerStarsP = new THREE.ParticleSystem(this.outerStars, this.starMaterial);
+		this.scene.add(this.outerStarsP);
+		//this.outerStarsP.visible = false;
 		
-		/*** Outer ring **/
-		this.outerRing = new THREE.Geometry();
-		color = [];
-		var numStars = Math.floor(Math.random()*MAP_CONFIG.MIN_OUTERSTARS) + (MAP_CONFIG.MAX_OUTERSTARS-MAP_CONFIG.MIN_OUTERSTARS);
-	    	for(var i = 0; i < numStars; i++)
-	    	{
-	    		var angle = Math.random() * Math.PI * 2;
-	    		var radius = Math.random() * (MAP_CONFIG.PARTICLE_AREA/2) - MAP_CONFIG.PARTICLE_AREA/4;
-	    		radius = Math.random() * 200 + 400;
-				//var z = Math.random() * (2 * radius) - radius;
-				//var phi = Math.random() * Math.PI * 2;
-				//var theta = Math.asin(z / radius);
-				
-				var pX = Math.cos(angle) * radius,
-					pY = Math.random()*70-35,
-					pZ = Math.sin(angle) * radius;
-				var pos = new THREE.Vector3(pX, pY, pZ);
-				
-				var h = Math.random() * (291 - 185) + 185,
-					s = Math.random() * (66 - 34) + 34,
-					v = Math.random() * (100 - 72) + 72;
-				color[i] = new THREE.Color(0xffffff);
-				color[i].setHSL(h / 360, s / 100, v / 100);
-				this.stars.outer[i] = {
-					index : i,
-					color: color,
-					hsl : [h/360,s/100,v/100],
-					type : 'stage 3',
-					name : 'Outer '+i,
-					ring : 'outer',
-					pos : pos
-				};
-				this.outerRing.vertices.push(pos);
-			}
-		this.outerRing.colors = color; 
-		this.outerSystem = new THREE.ParticleSystem(this.outerRing, this.starMaterial);
-		this.outerSystem.sortParticles = true;
-		this.scene.add(this.outerSystem);
+		var numStars = Math.floor(Math.random()*MAP_CONFIG.MIN_INNERSTARS)+(MAP_CONFIG.MAX_INNERSTARS-MAP_CONFIG.MIN_INNERSTARS);
+		var numArms = Math.floor(Math.random()*3 )+1;
+		armGeos = generateSpiralArms(numArms, numStars);
+		console.log(armGeos);
+		for(var i=0;i<armGeos.armGeos.length;i++){
+			var arm = new THREE.ParticleSystem(armGeos.armGeos[i], this.starMaterial);
+			arm.sortParticles = true;
+			this.galObjs.push(arm);
+			this.arms.push(arm);
+			this.scene.add(arm);
+		}
+		this.stars = armGeos.stars;
+
+
 
 		/** SET Players Location to a random outer star **/
-		this.player_star = Math.floor(Math.random()*this.stars.outer.length);
-		this.cur_star = this.stars.outer[this.player_star];
+		
+		this.player_star = Math.floor(Math.random()*Math.random()*(this.stars.length/2));
+		this.cur_star = this.stars[this.player_star];
 		this.cur_star.name = getName(4,12,'',' '+this.player_star);
 		$('#overlay_cur_star').attr('data-id',this.player_star).html(this.cur_star.name);
-
-		/** INNER RING **/
-		this.innerRing = new THREE.Geometry();
-		color = [];
-		numStars = Math.floor(Math.random()*MAP_CONFIG.MIN_INNERSTARS) + (MAP_CONFIG.MAX_INNERSTARS-MAP_CONFIG.MIN_INNERSTARS);
-	    	
-	    	for(var i = 0; i < numStars; i++)
-	    	{
-	    		var angle = Math.random() * Math.PI * 2;
-				var radius = Math.random() * 350 + 1;
-				var pX = Math.cos(angle) * radius,
-					pY = Math.random() * 200 * (1 / radius) * (Math.random() > .5 ? 1 : -1),
-					pZ = Math.sin(angle) * radius;
-				var pos = new THREE.Vector3(pX, pY, pZ);
-				
-				var h = Math.random() * (291 - 185) + 185,
-					s = Math.random() * (66 - 34) + 34,
-					v = Math.random() * (100 - 72) + 72;
-				color[i] = new THREE.Color(0xffffff);
-				color[i].setHSL(h / 360, s / 100, v / 100);
-				this.stars.inner[i] = {
-					index : i,
-					color: color,
-					hsl : [h/360,s/100,v/100],
-					type : 'stage 3',
-					mass : 1.2,
-					name : 'Inner '+i,
-					ring : 'inner',
-					pos : pos
+		//create overlay div for current location
+		var basicMat = new THREE.MeshBasicMaterial( { color: 0x779977, wireframe: true } );
+		this.star_marker = new THREE.Mesh( new THREE.SphereGeometry(20, 32, 32), basicMat);
+		this.star_marker.position.set(this.cur_star.pos.x, this.cur_star.pos.y, this.cur_star.pos.z);
+		this.scene.add(this.star_marker);
+		//this.star_arrow = new THREE.ArrowHelper(1, new THREE.Vector3(this.cur_star.pos.x, this.cur_star.pos.y, this.cur_star.pos.z),200);
+		//fuck it we'll do it live
+		var arrow_color = 0x779977;
+		this.star_arrow = new THREE.Object3D();
+		this.star_arrow.position.set(this.cur_star.pos.x, this.cur_star.pos.y, this.cur_star.pos.z-16);
+		this.star_arrow.visible = true;
+		var cone = new THREE.Mesh( new THREE.CylinderGeometry( 0, 0.2, 0.5, 5, 1 ), new THREE.MeshBasicMaterial( { color: arrow_color } ) );
+		cone.position.set(0, 0, 0);
+		cone.rotation.set(Math.PI,0,0);
+		var lineGeometry = new THREE.Geometry();
+		lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+		lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
+		var line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: arrow_color } ) );
+		this.star_arrow.add(line);
+		this.star_arrow.add(cone);
+		this.star_arrow.scale.set( 50, 50, 50);
+		this.star_arrow.rotation.set(Math.PI/2*3, 0, 0);
+		this.scene.add(this.star_arrow);
+		
+		//create routes between stars
+		this.routeMap = new THREE.Object3D();
+		//this just draws a line between each star in numeric index.. which makes no sense
+		//for(var i=1; i<Crap.starmap.stars.length-1; i++){ var s=Crap.starmap.stars[i]; var geo = new THREE.Geometry(); geo.vertices.push(Crap.starmap.stars[i-1].pos); geo.vertices.push(s.pos); var line = new THREE.Line(geo, new THREE.LineBasicMaterial({color: 0xff0000 }) ); if(!s.routes){ s.routes = {}; } s.routes[i-1] = {line:line, discovered:false}; routeMap.add(line); }
+		var maxRouteDist = 105;
+		var routeChance = 0.2; //random has to be lower than this to create a route
+		this.routeMat = new THREE.LineBasicMaterial({color: 0xff0000 });
+		this.routeOldMat = new THREE.LineBasicMaterial({color: 0x0000ff });
+		var maxRoutes = 3;
+		for(var i=0; i<Crap.starmap.stars.length-1; i++){
+			var matches = this.findNearStars(i, maxRouteDist);
+			this.stars[i].closeStars = matches;
+			for(var m=0;m<matches.length;m++){
+				var r = Math.random();
+				if(r> routeChance) continue;
+				if( !this.stars[matches[m]]['routes'] ){
+					this.stars[matches[m]]['routes'] = {};
+					this.stars[matches[m]]['routeNum'] = 0;
+				}
+				else if( this.stars[matches[m]].routeNum >= maxRoutes ){
+					continue;
+				}
+				if(this.stars[matches[m]].routes[i] ) continue;
+				if(this.stars[i].routeNum && this.stars[i].routeNum >= maxRoutes) continue;
+				var geo = new THREE.Geometry();
+				geo.vertices.push( this.stars[matches[m]].pos );
+				geo.vertices.push( this.stars[i].pos );
+				var line = new THREE.Line(geo, this.routeMat);
+				line.visible = (i==this.player_star||matches[m]==this.player_star)?true:false;
+				if(!this.stars[i].routes ){
+					this.stars[i].routes = {};
+					this.stars[i].routeNum = 0;
+				}
+				this.stars[i].routes[matches[m]] = {
+						line : line,
+						discovered : (i==this.player_star||matches[m]==this.player_star)?true:false,
+					};
+				this.stars[matches[m]].routes[i] = {
+					line : line,
+					discovered : (i==this.player_star||matches[m]==this.player_star)?true:false,
 				};
+				this.routeMap.add(line);
+				this.stars[matches[m]]['routeNum'] += 1;
 
-				this.innerRing.vertices.push(pos);
+				this.stars[i].routeNum += 1;
 			}
-		this.innerRing.colors = color; 
-		this.innerSystem = new THREE.ParticleSystem(this.innerRing, this.starMaterial);
-		this.innerSystem.sortParticles = true;
-		this.scene.add(this.innerSystem);
-
-
-		/*** CLOUDS ****/
-		this.innerClouds = new THREE.Geometry();
-		color = [];
-		for (var p = 0; p < MAP_CONFIG.CLOUD_PARTICLES; p++) {
-			var angle = Math.random() * Math.PI * 2;
-			var radius = Math.random() * 350 + 1;
-			var pX = Math.cos(angle) * radius,
-				pY = Math.random() * 200 * (1 / radius) * (Math.random() > .5 ? 1 : -1),
-				pZ = Math.sin(angle) * radius;
-			this.innerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
-			
-			var h = Math.random() * (291 - 185) + 185,
-				s = Math.random() * (66 - 34) + 34,
-				v = Math.random() * (100 - 72) + 72;
-			color[p] = new THREE.Color(0xffffff);
-			color[p].setHSL(h / 360, s / 100, v / 100);
 		}
-		this.innerClouds.colors = color;
-		this.cloudSystem = new THREE.ParticleSystem(this.innerClouds, this.cloudMaterial);
-		this.cloudSystem.sortParticles = true;
-		this.scene.add(this.cloudSystem);
+		this.scene.add(this.routeMap);
 
-
-		this.outerClouds = new THREE.Geometry();
-		color = [];
-		for(var p = 0; p < MAP_CONFIG.CLOUD_PARTICLES; p++) {
-			var angle = Math.random() * Math.PI * 2;
-			var radius = Math.random() * 200 + 400;
-			var pX = Math.cos(angle) * radius,
-				pY = Math.random() * 70 - 35,
-				pZ = Math.sin(angle) * radius;
-			this.outerClouds.vertices.push(new THREE.Vector3(pX, pY, pZ));
-			
-			var h = Math.random() * (291 - 185) + 185,
-				s = Math.random() * (66 - 34) + 34,
-				v = Math.random() * (100 - 72) + 72;
-			color[p] = new THREE.Color(0xffffff);
-			color[p].setHSL(h / 360, s / 100, v / 100);
-		}
-		this.outerClouds.colors = color;
-		this.cloudSystem2 = new THREE.ParticleSystem(this.outerClouds, this.cloudMaterial);
-		this.cloudSystem2.sortParticles = true;
-		this.scene.add(this.cloudSystem2);
+		
 
 
 		
 	}; //done adding stars
+
+
+	this.findNearStars = function(starID, minDist){
+		var matches = [];
+
+		for(var i=0;i<self.stars.length;i++){
+			if(i==starID) continue;
+			var dist = self.stars[i].pos.distanceTo( self.stars[starID].pos );
+			if(dist <= minDist) matches.push(i);
+		}
+
+		return matches;
+	};
 
 	this.animate = function(){
 		
 		requestAnimationFrame( self.animate );
 
 		if(self.animationPaused==false ){
-			self.outerSystem.rotation.y += 0.0007*MAP_CONFIG.ROTATE_SPEED;
-			//self.cloudSystem2.rotation.y += 0.0005*MAP_CONFIG.ROTATION_SPEED;
-			self.innerSystem.rotation.y += 0.0011*MAP_CONFIG.ROTATE_SPEED;
-			self.innerSystem.rotation.z = 0.3513*MAP_CONFIG.ROTATE_SPEED;
-			//self.cloudSystem.rotation.y += 0.0011*MAP_CONFIG.ROTATION_SPEED;
-			//self.cloudSystem.rotation.z = 0.3513*MAP_CONFIG.ROTATION_SPEED;
-
+			
+			/*
 			if(self.camera_track != 'origin' && self.camera_track){
 				//console.log(self.camera_track);
 				self.camera.lookAt(self.stars.outer[self.camera_track].pos)
 			}
+			else if( self.camera_track == 'origin' ){
+				self.camera.lookAt(THREE.Vector3(0,0,0) );
+			}
+			*/
+
+			//self.controls.update();
 		}
 
-
+		self.controls.update();
 
 		self.renderer.render( self.scene, self.camera );
 		//doStuff!
@@ -285,27 +285,29 @@ function StarMap(divID){
 	}
 
 	this.zoomStar = function(starID){
-		if(starID < 0 || starID > this.stars.outer.length){
+		if(starID < 0 || starID > this.stars.length){
 			this.resetCam(); return;
 		}
-		this.camera.position = new THREE.Vector3(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
-		this.camera.lookAt(this.stars.outer[starID].pos);
-		this.cameraControll({moveZ:-1000});
+		console.log("zoomStar "+starID, this.stars[starID]);
+		//this.camera.position = new THREE.Vector3(this.stars[starID].pos.x, this.stars[starID].pos.y, this.camera_orig.z-400) ;
+		//self.camera.lookAt(new THREE.Vector3(this.stars[starID].pos.x, this.stars[starID].pos.y, this.stars[starID].pos.z));
+		//
+		this.controls.target.set(this.stars[starID].pos.x, this.stars[starID].pos.y, this.stars[starID].pos.z);
+		this.cameraControll({moveZ:-1500});
+		//this.camera.position.setZ(300);
 		this.camera_track = parseInt(starID);
-		this.outerSystem.rotation.y = 0;
-		this.innerSystem.rotation.y = 0;
-		this.innerSystem.rotation.z = 0;
-		//this.cloudSystem.rotation.y = 0;
-		//this.cloudSystem.rotation.z = 0;
-		//this.cloudSystem2.rotation.y = 0;
-		this.animationPaused = true;
+		//this.animationPaused = true;
 	}
 
 	this.resetCam = function(){
-		this.camera.position = new THREE.Vector3(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
+		console.log('reset Cam');
+		/*
+		this.camera.position.set(this.camera_orig.x, this.camera_orig.y, this.camera_orig.z) ;
 		this.camera.lookAt(new THREE.Vector3(0,0,0));
 		this.camera_track = 'origin';
 		this.animationPaused = false;
+		*/
+		this.controls.reset();
 	}
 
 	this.cameraControll = function(param) {
@@ -387,3 +389,103 @@ function toCSSMatrix(threeMat4, b) {
   }
   return "matrix3d(" + f.join(",") + ")";
 }
+
+
+
+
+/** GALAXY Generation Algorithms **/
+function generateSpiralArms(numArms,numStars, config){
+	
+	//TODO expand with config
+	var defaults = {
+		h : 0.3,
+		radius : 800,
+		spread : 250,
+	}
+
+	var spread =defaults.spread;
+	var starsPerArm = numStars / numArms;
+	var fArmAngle = (360 / numArms ); //360 / numOfArms % 360
+	var fAngularSpread = spread / numArms; //180 / (numOfArms * 2)
+	var rotation = 1;
+	var color = [];
+	var basicMat = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } );
+	var armsAll = [];	
+	var stars = [];
+
+	//var trackStars = Math.floor( (numStars * numArms) / config.MAX_TRACKED );
+	var starCount = 0;
+	for(var arm=0;arm<numArms; arm++){
+		var armgeo = new THREE.Geometry();
+		var hue = (defaults.h/360) * ((arm)/numArms) + 0.05;
+		console.log("Arm "+arm, hue);
+		color = [];
+		for(var i=0; i<numStars;i++){
+
+			var fR = fHatRandom(defaults.radius); //Math.random()*64;
+			var fQ = fLineRandom(fAngularSpread) ;//Math.random()*fAngularSpread * 1;
+			var fK = 1;
+			//var fA = (Math.random % 1 /*numOfArms*/) * fArmAngle;
+			var fA = arm * (fArmAngle);
+			var fX = fR * Math.cos( deg2rads(fA+fR*fK+fQ) ) ;
+			var fY = fR * Math.sin( deg2rads(fA+fR*fK+fQ) ) ;
+			var fZ = Math.random()*10-5;
+
+			var mass = (Math.random()*50*Math.random())+1.0;
+
+
+			var pos = new THREE.Vector3(fX, fY, fZ);
+			armgeo.vertices.push( pos);
+			var c = new THREE.Color();
+			//c.setHSL = (hue, 0.8, (i/numStars)+0.3 );
+			//c.setRGB(hue,0,0);
+			//c.setHSL( hue, 0.8, 0.8);
+			color[i] = c;
+			color[i].setHSL( (hue+(mass*0.005)) , 0.9, 0.8);
+
+
+
+			stars[starCount] = {
+				index : starCount,
+				spiral : i,
+				mass : mass,
+				name : getName(3,15,'',''),
+				hsl : [hue, 1, 0.85],
+				color : color[i],
+				type : 'collapsed nova',
+				pos : pos
+			};
+
+			//create html text label and update it to match this item
+			
+
+			starCount++;
+		}
+		armgeo.colors = color;
+		//var arms = new THREE.ParticleSystem(armgeo, starMaterial);
+		//arms.sortParticles = true;
+		//galObjects.push(arms);
+		armsAll.push(armgeo);
+
+		
+	}
+	return {armGeos: armsAll, stars: stars};	
+
+}
+
+function fHatRandom(fRange)
+{
+	var fArea = 4*Math.atan(6.0);
+	var fP = fArea * Math.random();
+	return Math.tan(fP/4) * fRange / 6.0;
+}
+
+function fLineRandom(fRange)
+{
+	var fArea = fRange * fRange / 2;
+	var fP = fArea * Math.random();
+	return fRange - Math.sqrt( fRange * fRange - 2*fP);
+}
+
+function deg2rads(degs){ return degs * (Math.PI / 180 ); }
+function rads2degs(rads){ return rads * (180/Math.PI); }

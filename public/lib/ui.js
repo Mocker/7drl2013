@@ -25,6 +25,61 @@ var UI = {
 };
 
 
+UI.jumpMenu = function(){
+	//populate jump menu with locations and display it
+	var sID = Crap.starmap.player_star;
+	var routes = Crap.starmap.stars[sID].routes;
+	var keys = Object.keys(routes);
+	$('#jump_menu ul').children().remove();
+	for(var i=0;i<keys.length;i++){
+		var id = parseInt(keys[i]);
+		var name = Crap.starmap.stars[id].name;
+		$('#jump_menu ul').append('<li><button value="'+id+'">'+name+'</button></li>');
+	}
+	$('#jump_menu ul button').bind('click',function(){
+		var starID = parseInt( $(this).val() );
+		UI.jumpTo(starID);
+	});
+
+	$('#jump_menu').show();
+};
+
+//Jump button pressed. do things
+UI.jumpTo = function(starID){
+	console.log("JUMP TO "+starID);
+	if(!Crap.starmap.stars[starID]) return;
+
+	//set old route lines to different color mat
+	var oldroutes = Crap.starmap.stars[Crap.starmap.player_star].routes;
+	for(rtID in oldroutes){
+		
+		oldroutes[rtID].line.material = Crap.starmap.routeOldMat ;
+	}
+
+	Crap.starmap.player_star = starID;
+	Crap.starmap.cur_star = starID;
+	var s = Crap.starmap.stars[starID];
+
+	Crap.starmap.star_arrow.position.set(s.pos.x, s.pos.y, s.pos.z-16 );
+	Crap.starmap.star_marker.position.set(s.pos.x, s.pos.y, s.pos.z-16 );
+
+	$('#overlay_cur_star').html( Crap.starmap.stars[starID].name );
+
+	//auto discover star routes connected to this star
+	var keys = Object.keys(Crap.starmap.stars[starID].routes);
+	for(var i=0;i<keys.length;i++){
+		Crap.starmap.stars[starID].routes[keys[i]].line.visible = true;
+		Crap.starmap.stars[starID].routes[keys[i]].line.material = Crap.starmap.routeMat;
+		Crap.starmap.stars[starID].routes[keys[i]].discovered = true;
+	}
+
+	Crap.starmap.resetCam();
+	Crap.starmap.zoomStar(starID);
+
+	if( $('#jump_menu').css('display')=='block' ) UI.jumpMenu();
+
+};//
+
 
 /*** do all the initial creation here for:
 	player stats :
@@ -41,19 +96,13 @@ UI.roll_player = function(crap) {
 	crap.player.ship.init();
 	crap.player.ship.draw();
 
+	crap.player.crew_markers = {};
+
 	//crew members
 	$('#crew_list').children().remove();
 	for(var i=0;i<2;i++){
 		var name = getName(3,10,'','');
-		/*
-		crap.player.crew[name] = {
-			name : name,
-			stats : [],
-			skills : [],
-			id : i+1,
-			status : "healthy",
-		};
-		*/
+		
 		crap.player.crew[name] = new Crew();
 		crap.player.crew[name].name = name;
 		crap.player.crew[name].stats = [];
@@ -61,7 +110,17 @@ UI.roll_player = function(crap) {
 		crap.player.crew[name].id = i+1;
 		crap.player.crew[name].status = "healthy";
 
-		$('#crew_list').append('<li data-name="'+name+'">'+(i+1)+' - '+name+' (healthy)</li>');
+		//find available marker
+		for(var n=0;n<name.length;n++){
+			if(crap.player.crew_markers[name[n]]==undefined){
+				crap.player.crew[name].marker = name[n];
+				crap.player.crew_markers[name[n]] = name;
+				break;
+			}
+		}
+
+
+		$('#crew_list').append('<li data-name="'+name+'"><span class="crew_marker">'+crap.player.crew[name].marker+'</span> - <span class="crew_name">'+name+'</span> (<span class="crew_status">healthy</status>) (<span class="crew_activity">Wandering</span>)</li>');
 
 		for(var s=1;s<STATS.length;s++){
 			crap.player.crew[name].stats[s] = Math.floor(Math.random()*4)+4;
@@ -115,7 +174,7 @@ UI.roll_player = function(crap) {
 /** bind events for map control / overlay **/
 
 UI.bind_map = function(){
-	$('#overlay_cur_star').bind('click',function(evt){
+	$('#overlay_cur_star').unbind('click').bind('click',function(evt){
 		Crap.starmap.zoomStar( parseInt( $(this).attr('data-id') ) );
 	});
 	$('#overlay_cur_galaxy').bind('click',function(evt){

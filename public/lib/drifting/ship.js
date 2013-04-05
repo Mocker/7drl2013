@@ -50,11 +50,17 @@ function Ship (type, opts) {
 	};
 
 	this.createRandom = function(w,h) {
+		//ROT.Map.Digger = function(width, height, options)
+
 		//this.digger = new ROT.Map.Digger(this.w,this.h,5,0.7,1000);
-		this.digger = new ROT.Map.Digger(this.displayWidth/5,this.displayHeight/10,5,0.7,1000);
-		//SHOW(this.display.getContainer());
-		//this.digger.create(this.display.DEBUG);
-		//return;
+		//this.digger = new ROT.Map.Digger(this.displayWidth/5,this.displayHeight/10,2,0.7,1000);
+		this.digger = new ROT.Map.Digger(this.displayWidth/5,this.displayHeight/10,{
+			roomWidth: [4, 7], /* room minimum and maximum width */
+			roomHeight: [4, 7], /* room minimum and maximum height */
+			corridorLength: [2, 5], /* corridor minimum and maximum length */
+			dugPercentage: 0.8, /* we stop after this percentage of level area has been dug out */
+			timeLimit: 1000 /* we stop after this much time has passed (msec) */
+		});
 		this.freeCells = [];
 		this.map = {};
 		var self = this;
@@ -162,6 +168,8 @@ function Crew(){
 	this._assigned_room = undefined;
 	this._speed = 100;
 	this._laziness = Math.random()/2;
+	this.marker = '?'; //ascii marker for this character on the map
+	this.color = "#060";
 
 	//TODO: speed function should vary based on location of crew member (if outside/boarding/etc) and status
 	this.getSpeed = function(){ return this._speed; }
@@ -192,7 +200,7 @@ function Crew(){
 				this.pos.x = avail[which][0]; this.pos.y = avail[which][1];
 				bg = Crap.player.ship.map_colors[this.pos.x+','+this.pos.y] || MAP_COLORS.DEFAULT;
 				//bg = '#000';
-				Crap.player.ship.display.draw(this.pos.x,this.pos.y,this.id,'#000',bg);
+				Crap.player.ship.display.draw(this.pos.x,this.pos.y,this.marker,this.color,bg);
 			}
 		} 
 	}

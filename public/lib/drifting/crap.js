@@ -28,7 +28,8 @@ var Crap = {
         this.player = Player;
         this.player.name = playerName;
         this.gameStarted = new Date;
-        this.primarySeed = playerName+this.gameStarted.getTime();
+        var seedTxt = $('#game_seed').val();
+        this.primarySeed = (seedTxt && seedTxt.length > 0) ? seedTxt : playerName+this.gameStarted.getTime();
         Math.seedrandom(this.primarySeed);
 
         this.scheduler = new ROT.Scheduler();
