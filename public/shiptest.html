@@ -115,15 +115,23 @@
 		THREED.render();
 		THREED.renderTO = setInterval(THREED.render, 1000/THREED.config.FRAME_RATE);
 
+		THREED.keyListener = function(){}; //reset keyboard listener to do nothing
+		window.addEventListener('keydown', function(evt){  THREED.keyListener(evt); }, true);
+
 	});
 
 //function chooser changed - call relevant function
 function slChange(sl){
+	console.log('sl change '+sl);
 	var seed = parseInt( $('#input_seed').val() );
 	if(seed){ Math.seedrandom(seed) ; coreSeed = seed; }
 
+	$('.rotMap').remove(); //remove leftover canvas maps
+
+	THREED.keyListener = function(){}; //reset keyboard listener to do nothing
+
 	//clear the scene
-	for(var i=1;i<THREED.scene.children.length;i++){
+	for(var i=THREED.scene.children.length-1;i>0;i--){
 		THREED.scene.remove(THREED.scene.children[i]);
 	}
 
@@ -213,6 +221,7 @@ body {
 	</div>
 	<div style='float:left; position:relative; top:20px; margin-left:10px;'>
 		Seed: <input type='text' size=6 value='' id='input_seed'>
+		<input type='text' size=1 style='z-index:-1;' id='input_hidden'>
 	</div>
 
 	<div id='overlay_status' style='position:fixed; bottom:20px; margin-left:30%; max-width:500px'>

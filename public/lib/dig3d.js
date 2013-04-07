@@ -57,7 +57,7 @@ dig3d.init = function(c){
 	dig3d.mats.basic = new THREE.MeshBasicMaterial( { 
 		color: 0xaaffaa, 
 		wireframe: true,
-		transparent: false,
+		transparent: true,
 		opacity: 0.9,
 		side: THREE.DoubleSide });
 	dig3d.mats.corBasic = new THREE.MeshBasicMaterial( { 
@@ -67,11 +67,20 @@ dig3d.init = function(c){
 		opacity: 0.5,
 		side: THREE.DoubleSide });
 
+	dig3d.mats.roomFaces = [];
+	for ( var i = 0; i < 6; i ++ ) {
+		var faceColor = (i<4)? 0x774444 : 0x000000;
+		var isTran = (i>3)?true : false;
+		var opa = (i<4)? 0.9 : 0.0;
+    	dig3d.mats.roomFaces.push( new THREE.MeshBasicMaterial( { color: faceColor, transparent: isTran, opacity: opa, side: THREE.DoubleSide, blending: THREE.AdditiveBlending } ) );
+	}
+	dig3d.mats.roomFaceMat = new THREE.MeshFaceMaterial( dig3d.mats.roomFaces );
+
 	dig3d.drawMap();
 
 	c.renders = [dig3d.render];
-	c.camera.position.set(0, 300, 100);
-	c.camera.lookAt(new THREE.Vector3(0,0,0) );
+	dig3d.c.camera.position.set(-60, -273, -705);
+	dig3d.c.camera.lookAt( new THREE.Vector3(0, 0, 0) );
 
 }
 
@@ -108,12 +117,22 @@ dig3d.drawMap = function(){
 	dig3d.mapArray = {};
 	dig3d.freeCells = [];
 
+	dig3d.rotDisplay = new ROT.Display({fontSize:p.cellSize/2});
+	var rotC = dig3d.rotDisplay.getContainer();
+	$(rotC).css('position','fixed').css('top','0').css('left','0');
+	rotC.width = p.cellSize/2 * p.w; rotC.height = p.cellSize/2 * p.h;
+	$(rotC).addClass('rotMap');
+	$('#canvas_box').append(rotC);
+
 	dig3d.digCallback = function(x, y, value){
+		dig3d.rotDisplay.DEBUG(x, y, value);
 		if(value) return;
 		var key = x+","+y;
         dig3d.mapArray[key] = 'F';
         dig3d.freeCells.push(key);
 	};
+
+
 
 	dig3d.map.create(dig3d.digCallback);	
 	dig3d.mapObj = new THREE.Object3D();
@@ -140,24 +159,67 @@ dig3d.drawMap = function(){
 	console.log(outline);
 	outline = new THREE.Mesh(new THREE.CubeGeometry(p.w*p.cellSize,p.h*p.cellSize,p.cellHeight), dig3d.mats.basic);
 	outline.position.set(  (p.w*p.cellSize)/2,  (p.h*p.cellSize)/2, 0);
-	dig3d.mapObj.add(outline);
+	//dig3d.mapObj.add(outline);
+
+	dig3d.mapCanvas = document.createElement("canvas");
+	
+	dig3d.mapCanvas.width = p.w*p.cellSize;
+	dig3d.mapCanvas.height = p.h*p.cellSize;
+	var ctx = dig3d.mapCanvas.getContext('2d');
+	ctx.fillStyle = '#666';
+	ctx.fillRect(0, 0, (p.w*p.cellSize, p.h*p.cellSize) );
+	ctx.strokeStyle = '#161';
+	for(var x=0;x<p.w;x++){
+		ctx.beginPath();
+		ctx.moveTo(x*p.cellSize, 0);
+		ctx.lineTo(x*p.cellSize, p.h*p.cellSize);
+		ctx.stroke();
+	}
+	for(var y=0;y<p.h;y++){
+		ctx.beginPath();
+		ctx.moveTo(0, y*p.cellSize);
+		ctx.lineTo(p.w*p.cellSize, y*p.cellSize);
+		ctx.stroke();
+	}
+	dig3d.canvasTex = new THREE.Texture(dig3d.mapCanvas);
+	dig3d.canvasTex.needsUpdate = true;
+	dig3d.mats.baseMat = new THREE.MeshBasicMaterial({
+		map : dig3d.canvasTex,
+		side: THREE.DoubleSid,
+	});
+
+	dig3d.baseMap = new THREE.Mesh(new THREE.PlaneGeometry(p.w*p.cellSize,p.h*p.cellSize), dig3d.mats.baseMat);
+	//dig3d.baseMap.doubleSided = true;
+	dig3d.baseMap.position.set((p.w*p.cellSize)/2,  (p.h*p.cellSize)/2, 15 );
+	dig3d.baseMap.rotation.setY(Math.PI);
+	dig3d.mapObj.add(dig3d.baseMap);
+
+	
+
 
 	//create rooms
 	dig3d.rooms = dig3d.map.getRooms();
 	dig3d.roomObjs = [];
 	for(var i=0;i<dig3d.rooms.length; i++){
 		var r = dig3d.rooms[i];
-		var coords = { LeftTop: [r.getLeft(), r.getTop()], RightBottom: [r.getRight(), r.getBottom() ] };
+		var coords = { LeftTop: [r._x1, r._y1], RightBottom: [r._x2, r._y2 ] };
 		r['coords'] = coords;
 		var w = Math.abs(coords.LeftTop[0] - coords.RightBottom[0] );
 		var h = Math.abs(coords.LeftTop[1] - coords.RightBottom[1] );
-		var cube = new THREE.Mesh(new THREE.CubeGeometry(w*p.cellSize, h*p.cellSize, p.cellHeight), dig3d.mats.basic);
+		var cube = new THREE.Mesh(new THREE.CubeGeometry(w*p.cellSize, h*p.cellSize, p.cellHeight, 1,1,1), dig3d.mats.roomFaceMat );
 		//cube.position.set( coords.LeftTop[0]*p.cellSize - ((p.w*p.cellSize)/2), coords.LeftTop[1]*p.cellSize - ((p.h*p.cellSize)/2), 0);
-		cube.position.set( coords.LeftTop[0]*p.cellSize +(w/2), coords.LeftTop[1]*p.cellSize +(h/2) , 0);
+		cube.position.set( coords.LeftTop[0]*p.cellSize + (w*p.cellSize)/2, coords.LeftTop[1]*p.cellSize + (h*p.cellSize)/2 , 0);
 		
 		dig3d.roomObjs.push(cube);
 		r['cube'] = cube;
-		//dig3d.c.scene.add(cube);
+		
+		//draw on 2d map texture
+		//var ctx = dig3d.mapCanvas.getContext('2d');
+		//ctx.fillStyle = 'rgba(220, 50, 20, 0.5)';
+		//ctx.fillRect(coords.LeftTop[0]*p.cellSize + (w*p.cellSize)/2, coords.LeftTop[1]*p.cellSize + (h*p.cellSize)/2, r._y2*p.cellSize );
+		//ctx.fillRect( coords.LeftTop[0]*p.cellSize, coords.LeftTop[1]*p.cellSize , (w*p.cellSize) , (h*p.cellSize) );
+		//dig3d.canvasTex.needsUpdate = true;
+
 		dig3d.mapObj.add(cube);
 
 	}
@@ -177,14 +239,25 @@ dig3d.drawMap = function(){
 		var lineGeo = new THREE.Geometry();
 		//lineGeo.vertices.push(new THREE.Vector3(r._startX*p.cellSize - ((p.w*p.cellSize)/2), r._startY*p.cellSize - ((p.h*p.cellSize)/2), 0    ));
 		//lineGeo.vertices.push(new THREE.Vector3(r._endX*p.cellSize - ((p.w*p.cellSize)/2), r._endY*p.cellSize - ((p.h*p.cellSize)/2), 0    ));
-		lineGeo.vertices.push(new THREE.Vector3(r._startX*p.cellSize , r._startY*p.cellSize , 0    ));
-		lineGeo.vertices.push(new THREE.Vector3(r._endX*p.cellSize , r._endY*p.cellSize , 0    ));
+		lineGeo.vertices.push(new THREE.Vector3(r._startX*p.cellSize+p.cellSize/2 , r._startY*p.cellSize +p.cellSize/2, 0    ));
+		lineGeo.vertices.push(new THREE.Vector3(r._endX*p.cellSize +p.cellSize/2, r._endY*p.cellSize+p.cellSize/2 , 0    ));
 		var cube = new THREE.Line(lineGeo, dig3d.mats.corLine );
 		//var cube = new THREE.Mesh(new THREE.CubeGeometry(w*p.cellSize, h*p.cellSize, p.cellHeight), dig3d.mats.corBasic);
 		//cube.position.set( coords.LeftTop[0]*p.cellSize , coords.LeftTop[1]*p.cellSize, 0);
 		dig3d.corObjs.push(cube);
 		r['cube'] = cube;
 		//dig3d.c.scene.add(cube);
+
+		//draw on 2d map texture
+		var ctx = dig3d.mapCanvas.getContext('2d');
+		ctx.strokeStyle = '#fff';
+		ctx.moveTo(r._startX*p.cellSize+(p.cellSize/2), r._startY*p.cellSize+(p.cellSize/2) );
+		ctx.lineTo(r._endX*p.cellSize*(p.cellSize/2), r._endY*p.cellSize+p.cellSize/2);
+		//ctx.lineWidth= p.cellSize/2;
+		//ctx.stroke();
+		
+		//dig3d.canvasTex.needsUpdate = true;
+
 		dig3d.mapObj.add(cube);
 
 	}
@@ -206,10 +279,43 @@ dig3d.drawMap = function(){
 		dig3d.crew.push(crew);
 	}
 
+	//add keyboard interactive player!
+	dig3d.player = new dig3d.PC();
+	if(dig3d.player && dig3d.player.mesh) dig3d.mapObj.add(dig3d.player.mesh);
+	dig3d.c.keyListener = dig3d.keyDown;
+
+
+	var axis = new THREE.AxisHelper(40);
+	axis.position.set((p.w*p.cellSize)/2, (p.h*p.cellSize)/2, 0);
+	dig3d.mapObj.add( axis );
+
 
 	dig3d.mapObj.position.set( - ((p.w*p.cellSize)/2), - ((p.h*p.cellSize)/2), 0);
 	dig3d.c.scene.add(dig3d.mapObj);
 
+	ctx.strokeStyle = '#161';
+	ctx.lineWidth = 1;
+	for(var x=0;x<p.w;x++){
+		ctx.beginPath();
+		ctx.moveTo(x*p.cellSize, 0);
+		ctx.lineTo(x*p.cellSize, p.h*p.cellSize);
+		ctx.stroke();
+	}
+	for(var y=0;y<p.h;y++){
+		ctx.beginPath();
+		ctx.moveTo(0, y*p.cellSize);
+		ctx.lineTo(p.w*p.cellSize, y*p.cellSize);
+		ctx.stroke();
+	}
+	dig3d.canvasTex.needsUpdate = true;
+
+
+	dig3d.c.camera.position.set(46.7, 261.75, -710);
+	dig3d.c.camera.up.set( 0.02, -0.996, -0.096 );
+	dig3d.c.camera.lookAt( new THREE.Vector3(0, 0, 0) );
+	
+
+	$('#input_hidden').focus();
 
 };
 
@@ -217,6 +323,91 @@ dig3d.digShapeChanged = function(){
 
 };
 
+dig3d.keyDown = function(evt){
+	//handle key events
+	if(dig3d.player != undefined) dig3d.player.keyPressed(evt.keyCode);
+	$('#input_hidden').text('');
+};
+
+dig3d.PC = function(){
+	this.stats = {
+		health : 100,
+		isProperChap : true,
+		name : 'Trogdor',
+		speed : 1000,
+		turnWait : 0, //when does an action set this to speed
+		isFrozen : false,
+	};
+
+	this.meshSize = 30;
+	this.mesh = null ; 
+	
+
+	this.createMesh = function(){
+		var darkMaterial = new THREE.MeshBasicMaterial( { color: 0xffffcc } );
+		var wireframeMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true, transparent: true } ); 
+		this.multiMaterial = [ darkMaterial, wireframeMaterial ];
+		this.mesh = THREE.SceneUtils.createMultiMaterialObject( 
+			// radiusAtTop, radiusAtBottom, height, segmentsAroundRadius, segmentsAlongHeight,
+			new THREE.CylinderGeometry( 5, this.meshSize/2, 20, 4, 4 ), 
+			this.multiMaterial );
+		this.mesh.rotation.setX(Math.PI*3/2);
+	};
+
+	this.moveTick = function(timeSince){
+		if(this.stats.turnWait > 0 ) this.stats.turnWait -= timeSince ;
+		
+		//do updates and stuff whatever. I don't care. do whatchyawant	
+	};
+
+	this.keyPressed = function(keyCode){
+		if(this.stats.isFrozen ==false && this.stats.turnWait < 1 && (keyCode==39||keyCode==37||keyCode==40||keyCode==38) ) this.moveDir(keyCode);
+	};
+
+	this.moveTo = function(target){
+
+	};
+
+	this.moveDir = function(dir){
+		console.log("Move player "+dir);
+		var newPos = [ this.pos.x+0, this.pos.y+0 ];
+		switch(dir) {
+			case 38 : //UP
+				newPos[1] -= 1;
+				break;
+			case 40 : //DOWN
+				newPos[1] += 1;
+				break;
+			case 37 : //LEFT
+				newPos[0] -= 1;
+				break;
+			case 39: //RIGHT
+				newPos[0] += 1;
+				break;
+			default :
+				//invalid direction
+				return;
+				break;
+		}
+
+		if( dig3d.mapArray[newPos[0]+','+newPos[1]]!='F' ) return; //BONK
+		this.pos.x = newPos[0]; this.pos.y = newPos[1];
+		this.mesh.position.set(this.pos.x*dig3d.params.cellSize, this.pos.y*dig3d.params.cellSize, 0);
+				
+	};
+
+
+	
+	this.createMesh();
+
+	var s = Math.floor(Math.random()*dig3d.freeCells.length);
+	var pos = dig3d.freeCells[s].split(',');
+	this.pos = {x: parseInt(pos[0]), y: parseInt(pos[1]) };
+
+	this.mesh.position.set(this.pos.x*dig3d.params.cellSize, this.pos.y*dig3d.params.cellSize, 0);
+
+	return this;
+};
 
 dig3d.crewMember = function(){
 	this.stats = {
@@ -246,7 +437,7 @@ dig3d.crewMember = function(){
 				//console.log("crew moving!");
 				var which = Math.floor(Math.random()*avail.length);
 				this.pos.x = avail[which][0]; this.pos.y = avail[which][1];
-				this.sphere.position.set( this.pos.x*dig3d.params.cellSize + dig3d.params.cellSize/2, this.pos.y*dig3d.params.cellSize + dig3d.params.cellSize/2, 0);
+				this.sphere.position.set( this.pos.x*dig3d.params.cellSize +dig3d.params.cellSize/2, this.pos.y*dig3d.params.cellSize+dig3d.params.cellSize/2 , 0);
 				
 			}
 	}; 
