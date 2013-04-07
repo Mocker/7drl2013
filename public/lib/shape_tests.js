@@ -24,6 +24,7 @@ st.init = function(c){
 
 	var params = {
 		shapeSelected : 'GrannyKnot',
+		shapeColor : '#ffffff',
 		shapes : ['GrannyKnot','Torus','Sphere','Klein Bottle','Mobius Strip'],
 		shapeLoaders : {
 			'GrannyKnot':st.drawGranny,
@@ -52,6 +53,10 @@ st.init = function(c){
 
 	console.log(params);
 	st.guiswitch = gui.add(params, 'shapeSelected',params.shapes).onFinishChange(st.shapeChanged);
+	gui.addColor(params, 'shapeColor').onChange(function(val){
+		val = val.replace('#','0x');
+		st.mats.basic.color = new THREE.Color(val*0x000001);
+	});
 	gui.add(params,'animationOn');
 
 	st.drawGranny();

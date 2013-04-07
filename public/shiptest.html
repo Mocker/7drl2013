@@ -90,8 +90,9 @@
 		THREED.camera.position.z = 1000;
 		THREED.camera.useQuaternion = true; 
 		THREED.scene = new THREE.Scene();
-		THREED.renderer = new THREE.WebGLRenderer();
+		THREED.renderer = new THREE.WebGLRenderer({antialias:true});
 		THREED.renderer.setSize(window.innerWidth, window.innerHeight);
+		THREED.renderer.shadowMapEnabled = true;
 	
 		container = document.getElementById('canvas_box');
 		container.appendChild(THREED.renderer.domElement);
@@ -127,6 +128,7 @@ function slChange(sl){
 	if(seed){ Math.seedrandom(seed) ; coreSeed = seed; }
 
 	$('.rotMap').remove(); //remove leftover canvas maps
+	//THREED.controls.target = new THREE.Vector3(0, 0, 0);
 
 	THREED.keyListener = function(){}; //reset keyboard listener to do nothing
 
