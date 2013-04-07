@@ -292,6 +292,7 @@ dig3d.drawMap = function(){
 		//cube.position.set( coords.LeftTop[0]*p.cellSize - ((p.w*p.cellSize)/2), coords.LeftTop[1]*p.cellSize - ((p.h*p.cellSize)/2), 0);
 		cube.position.set( coords.LeftTop[0]*p.cellSize + (w*p.cellSize)/2, coords.LeftTop[1]*p.cellSize + (h*p.cellSize)/2 , 0);
 		cube.castShadow = true;
+		cube.receiveShadow = true;
 
 		dig3d.roomObjs.push(cube);
 		r['cube'] = cube;
