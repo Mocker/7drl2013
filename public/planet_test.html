@@ -9,6 +9,10 @@
 <script src="lib/CurveExtras.js" type="text/javascript"></script>
 <script src="lib/ParametricGeometries.js" type="text/javascript"></script>
 <script src="lib/seedrandom.js" type="text/javascript"></script>
+<script src="lib/sketch.js" type="text/javascript"></script>
+
+<script src="lib/canvasTerrain.js" type="text/javascript"></script>
+<script src="lib/planet_test.js"></script>
 
 
 <script type="text/javascript">
@@ -37,11 +41,13 @@
 		renderer : null,
 		canvas : null,
 		controls : null,
+		w : window.innerWidth,
+		h: window.innerHeight,
 		config : {
 			CAMERA_FOV      : 45,
 			CAMERA_ASPECT   : window.innerWidth / window.innerHeight,
 			CAMERA_NEAR     : 1,
-			CAMERA_FAR      : 5000,
+			CAMERA_FAR      : 95000,
 			FRAME_RATE : 20, //fps for the render callback
 		},
 		animates : [],
@@ -87,7 +93,9 @@
 		THREED.camera.position.z = 1000;
 		THREED.camera.useQuaternion = true; 
 		THREED.scene = new THREE.Scene();
-		THREED.renderer = new THREE.WebGLRenderer();
+		THREED.clock = new THREE.Clock();
+		THREED.renderer = new THREE.WebGLRenderer({clearColor: 0x000000, clearAlpha : 1});
+
 		THREED.renderer.setSize(window.innerWidth, window.innerHeight);
 	
 		container = document.getElementById('canvas_box');
@@ -126,17 +134,14 @@ function slChange(sl){
 
 	switch($(sl).val())
 	{
-		case '3D Shape Test':
+		case 'Earth Demo':
 			console.log('3d shape test');
+			st.clear();
 			THREED.defaultSphere.visible = false;
 			st.init(THREED);
+			st.initEarth();
 			break;
 
-		case '3D Diggers':
-			console.log('digger 3d tests');
-			THREED.defaultSphere.visible = false;
-			dig3d.init(THREED);
-			break;
 
 		default:
 			for(var i=THREED.scene.children.length-1;i>0;i--){
@@ -186,6 +191,22 @@ body {
 	z-index: 200;
 	pointer-events:auto;
 }
+.canvas_float {
+	position:fixed;
+	width: 100%;
+	height: 100%;
+	z-index: 50;
+	top: 0;
+	left: 0;
+}
+#sketchy {
+	width: 400px;
+	height: 300px;
+	top:100px;
+	left:50px;
+	border: 2px solid #333;
+	cursor : pointer,
+}
 </style>
 </head>
 <body>
@@ -196,16 +217,12 @@ body {
 <div id='overlay_container'>
 
 	<div style='float: left'>
-		<h2>Procedural Ship Test </h2>
+		<h2>Procedural Planet Test </h2>
 	</div>
 	<div style='float:left; position:relative;top:20px; margin-left:15px;'>
 		<select id='slFunction' onChange='slChange(this);'>
 			<option value='none'>Select test..</option>
-			<option value='2D Sprites'>2D Sprites</option>
-			<option value='2D Diggers'>2D Diggers</option>
-			<option value='3D Diggers'>3D Diggers</option>
-			<option value='3D Legos'>3D Legos</option>
-			<option value='3D Shape Test'>3D Shape Test</option>
+			<option value='Earth Demo'>Earth Demo</option>
 		</select>
 	</div>
 	<div style='float:left; position:relative; top:20px; margin-left:10px;'>
@@ -214,6 +231,10 @@ body {
 
 	<div id='overlay_status' style='position:fixed; bottom:20px; margin-left:30%; max-width:500px'>
 		<h3 id='h3_status'>Select a Test from the dropdown menu</h3>
+	</div>
+
+	<div id='canvases'>
+
 	</div>
 
 </div>
