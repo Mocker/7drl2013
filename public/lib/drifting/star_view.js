@@ -23,7 +23,6 @@ var starCanvas = {
 
 
 	setup : function(containerID){
-		if(!this['isStarCanvas']) this=starCanvas; 
 		this.container = $(containerID);
 		this.width = this.container.width();
 		this.height = this.container.height();
@@ -109,8 +108,6 @@ var starCanvas = {
 	},
 
 	loadStar : function(starID){
-		if(!this['isStarCanvas']) this=starCanvas; 
-
 		console.log('loading star '+starID);
 		this.starID = starID;
 		//generate random shader material
@@ -204,7 +201,6 @@ var starCanvas = {
 	},
 
 	clearStar : function(){
-		if(!this['isStarCanvas']) this=starCanvas; 
 		
 		//this.objs = {};
 		this.renderTO = null;
@@ -248,3 +244,4 @@ var starCanvas = {
 	},
 
 };
+window.starCanvas = starCanvas;

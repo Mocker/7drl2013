@@ -227,7 +227,7 @@ dig3d.drawMap = function(){
 	dig3d.mapCanvas.height = p.h*p.cellSize;
 	var ctx = dig3d.mapCanvas.getContext('2d');
 	ctx.fillStyle = '#666';
-	ctx.fillRect(0, 0, (p.w*p.cellSize, p.h*p.cellSize) );
+	ctx.fillRect(0, 0, p.w*p.cellSize, p.h*p.cellSize );
 	ctx.strokeStyle = '#161';
 	for(var x=0;x<p.w;x++){
 		ctx.beginPath();
